@@ -2,15 +2,16 @@ import sys
 import json 
 import subprocess
 from pathlib import Path 
-from typing import Optional
+from typing import Optional,Literal
 from playwright.sync_api import sync_playwright 
 
 
 class GeminiBot:
 
-    def __init__(self,executable:str,port:str):
+    def __init__(self,executable:str,port:str,overloading_export:Literal[0,1]=0):
         self.executable = executable 
         self.port = port 
+        self.overloading_export = int(overloading_export)
         self.config = self.load_config()
         self.start_playwright_page() 
 
@@ -56,7 +57,7 @@ class GeminiBot:
         return json.load(open('config.json','r'))
     
     def export(self,content:str):
-        with open(Path(self.config['output_file']),'a') as file:
+        with open(Path(self.config['output_file']),'a' if not self.overloading_export else 'w') as file:
             file.write(content)
             file.write('\n\n#---------------------------------#\n\n')
         self.process.terminate()
@@ -65,6 +66,7 @@ class GeminiBot:
 if __name__ == '__main__':
     bot = GeminiBot(
         executable=sys.argv[1],
-        port=sys.argv[2]
+        port=sys.argv[2],
+        overloading_export=sys.argv[3] if len(sys.argv) > 3 else 0
     )
     bot.export(bot.search())
