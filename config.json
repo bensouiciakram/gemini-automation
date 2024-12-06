@@ -1,7 +1,11 @@
 {
     "prompt":{
         "text":  "Please return the important information in the attachment in JSON format." ,
-        "file": "C:\\Users\\benso\\Desktop\\test.jpeg"
+        "image":"C:\\Users\\benso\\Desktop\\test.jpeg",
+        "files": [
+            "C:\\Users\\benso\\Desktop\\test1.txt",
+            "C:\\Users\\benso\\Desktop\\test2.txt"
+        ]
     },
     "output_file":"C:\\Users\\benso\\Desktop\\output.txt"
 }

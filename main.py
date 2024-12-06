@@ -39,7 +39,6 @@ class GeminiBot:
         self.context = self.browser.contexts[0]
         self.page = self.context.new_page()
         self.page.goto('https://gemini.google.com/')
-        breakpoint()
         self.check_advanced()
     
     def search_text(self,prompt:str) -> str :
@@ -49,21 +48,27 @@ class GeminiBot:
         return self.page.query_selector_all('//message-content')[-1].inner_text()
 
     def search(self) -> str:
-        upload_file = self.config['prompt']['file']
-        self.upload(Path(upload_file)) if upload_file else None
+        self.upload()
+        breakpoint()
         return self.search_text(self.config['prompt']['text'])
 
-    def upload(self,file_path:Path):
+    def upload(self):
         def activate_input_button():
             with self.page.expect_file_chooser() as fc_info:
                 self.page.click('//uploader')
-                self.page.click('//button[@id="image-uploader-local"]') \
+                self.page.click(f'//button[@id="{"image" if self.config["prompt"]["image"] else "file"}-uploader-local"]') \
                     if self.advanced else None  
 
 
         activate_input_button()
-        self.page.query_selector('//input[@name="Filedata"]')\
-            .set_input_files(file_path) 
+        if self.config['prompt']['image'] :
+            self.page.query_selector('//input[@name="Filedata"]')\
+                .set_input_files(self.config['prompt']['image'])
+        elif self.config['prompt']['files']:
+            self.page.query_selector('//input[@name="Filedata"]')\
+                .set_input_files(self.config['prompt']['files'])
+        else :
+            pass 
         
     def load_config(self) -> dict:
         return json.load(open('config.json','r',encoding='utf-8'))
