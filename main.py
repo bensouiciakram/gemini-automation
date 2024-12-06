@@ -39,6 +39,8 @@ class GeminiBot:
         self.context = self.browser.contexts[0]
         self.page = self.context.new_page()
         self.page.goto('https://gemini.google.com/')
+        breakpoint()
+        self.check_advanced()
     
     def search_text(self,prompt:str) -> str :
         self.page.fill('//rich-textarea//p',prompt)
@@ -54,7 +56,10 @@ class GeminiBot:
     def upload(self,file_path:Path):
         def activate_input_button():
             with self.page.expect_file_chooser() as fc_info:
-                self.page.click('//button[@id="upload-local-image-button"]')
+                self.page.click('//uploader')
+                self.page.click('//button[@id="image-uploader-local"]') \
+                    if self.advanced else None  
+
 
         activate_input_button()
         self.page.query_selector('//input[@name="Filedata"]')\
@@ -74,6 +79,11 @@ class GeminiBot:
             file.write('\n\n#---------------------------------#\n\n')
         self.free_up_playwright_resources()
         self.process.terminate()
+
+    def check_advanced(self):
+        self.advanced = 'advanced' in self.page.query_selector(
+            '//bard-mode-switcher'
+        ).inner_text().lower()
 
 
 
