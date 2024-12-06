@@ -49,7 +49,6 @@ class GeminiBot:
 
     def search(self) -> str:
         self.upload()
-        breakpoint()
         return self.search_text(self.config['prompt']['text'])
 
     def upload(self):
