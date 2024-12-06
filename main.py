@@ -23,12 +23,19 @@ class GeminiBot:
             ]
         )
 
+    def close_empty_tab(self):
+        for context in self.browser.contexts:
+            for page in context.pages:
+                if not page.url or page.url == 'chrome://new-tab-page/':
+                    page.close()
+
     def start_playwright_page(self):
         self.start_real_browser_instance()
         playwright = sync_playwright().start()
         self.browser = playwright.chromium.connect_over_cdp(
             f"http://localhost:{self.port}"
         )
+        self.close_empty_tab()
         self.context = self.browser.contexts[0]
         self.page = self.context.new_page()
         self.page.goto('https://gemini.google.com/')
@@ -54,13 +61,21 @@ class GeminiBot:
             .set_input_files(file_path) 
         
     def load_config(self) -> dict:
-        return json.load(open('config.json','r'))
+        return json.load(open('config.json','r',encoding='utf-8'))
+    
+    def free_up_playwright_resources(self):
+        self.page.close()
+        self.context.close()
+        self.browser.close()
     
     def export(self,content:str):
-        with open(Path(self.config['output_file']),'a' if not self.overloading_export else 'w') as file:
+        with open(Path(self.config['output_file']),'a' if not self.overloading_export else 'w',encoding='utf-8') as file:
             file.write(content)
             file.write('\n\n#---------------------------------#\n\n')
+        self.free_up_playwright_resources()
         self.process.terminate()
+
+
 
 
 if __name__ == '__main__':

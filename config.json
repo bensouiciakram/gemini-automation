@@ -1,7 +1,7 @@
 {
     "prompt":{
-        "text": "how i can be good programmer in 2024",
-        "file": ""
+        "text":  "Please return the important information in the attachment in JSON format." ,
+        "file": "C:\\Users\\benso\\Desktop\\test.jpeg"
     },
     "output_file":"C:\\Users\\benso\\Desktop\\output.txt"
 }
