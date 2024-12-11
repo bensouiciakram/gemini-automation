@@ -63,7 +63,7 @@ class GeminiBot:
         if self.config['prompt']['image'] :
             self.page.query_selector('//input[@name="Filedata"]')\
                 .set_input_files(self.config['prompt']['image'])
-        elif self.config['prompt']['files']:
+        elif self.config['prompt']['files'] and self.advanced:
             self.page.query_selector('//input[@name="Filedata"]')\
                 .set_input_files(self.config['prompt']['files'])
         else :
