@@ -16,4 +16,6 @@ class FileSystem :
 
     def check_new_input_files(self,checker:Callable) -> List[str]:
         input_files = [file.name for file in self.input_path.iterdir() if file.is_file()]
-        return [input_file for input_file in input_files if checker(input_file)]
+        new_inputs = [input_file for input_file in input_files if checker(input_file)]
+        new_inputs.sort()
+        return new_inputs
