@@ -6,6 +6,7 @@ from typing import Optional,Literal
 from playwright.sync_api import sync_playwright 
 
 
+
 class GeminiBot:
 
     def __init__(
@@ -20,15 +21,6 @@ class GeminiBot:
         self.overloading_export = int(overloading_export)
         self.config = self.load_config()
         self.start_playwright_page() 
-        self.create_folders(input_path,output_path)
-
-    def create_folders(self,input_path:str,output_path:str):
-        self.input_path = Path(__file__).parents[1].joinpath('inputs') \
-            if not input_path else Path(input_path)
-        self.output_path = Path(__file__).parents[1].joinpath('outputs') \
-            if not output_path else Path(output_path)
-        self.input_path.mkdir(exist_ok=True)
-        self.output_path.mkdir(exist_ok=True)
 
     def start_real_browser_instance(self):
         self.process = subprocess.Popen(
