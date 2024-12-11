@@ -2,3 +2,5 @@
 *.zip
 *.rar 
 test.py
+inputs/
+outputs/
