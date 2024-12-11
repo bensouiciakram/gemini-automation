@@ -21,8 +21,8 @@ class Db :
             self.Config.input_path == file_path
         )
 
-    def check_exists(self,file_path:str) -> bool :
-        return(self.db.search(self.Config.input_path == file_path))
+    def check_non_existance(self,file_path:str) -> bool :
+        return not bool(self.db.search(self.Config.input_path == file_path))
     
     def search_unused(self) -> List[dict]:
         return self.db.search(self.Config.used == False)

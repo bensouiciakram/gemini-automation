@@ -1,4 +1,5 @@
 from pathlib import Path 
+from typing import Callable,List
 
 class FileSystem :
 
@@ -7,7 +8,12 @@ class FileSystem :
             if not input_path else Path(input_path)
         self.output_path = Path(__file__).parents[1].joinpath('outputs') \
             if not output_path else Path(output_path)
+        self.create_folders()
 
     def create_folders(self):
         self.input_path.mkdir(exist_ok=True)
         self.output_path.mkdir(exist_ok=True)
+
+    def check_new_input_files(self,checker:Callable) -> List[str]:
+        input_files = [file.name for file in self.input_path.iterdir() if file.is_file()]
+        return [input_file for input_file in input_files if checker(input_file)]
