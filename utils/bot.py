@@ -14,12 +14,10 @@ class GeminiBot:
             executable:str,
             port:str,
             overloading_export:Literal[0,1]=0,
-            input_path:str=None,
-            output_path:str=None):
+            ):
         self.executable = executable 
         self.port = port 
         self.overloading_export = int(overloading_export)
-        self.config = self.load_config()
         self.start_playwright_page() 
 
     def start_real_browser_instance(self):
@@ -49,31 +47,44 @@ class GeminiBot:
         self.page.goto('https://gemini.google.com/')
         self.check_advanced()
     
-    def search_text(self,prompt:str) -> str :
+    def search_text(self,prompt:str,index:int) -> str :
         self.page.fill('//rich-textarea//p',prompt)
         self.page.click('//button[contains(@class,"send-button")]')
-        self.page.wait_for_selector('//message-actions')
-        return self.page.query_selector_all('//message-content')[-1].inner_text()
+        # self.page.wait_for_selector('//message-actions')
+        self.page.wait_for_selector(
+            f'//div[contains(@class,"message-actions-hover-boundary") and position()={index+1}]'
+        )
+        self.page.wait_for_timeout(1000)
+        self.page.wait_for_selector(
+            '//div[contains(@class,"message-actions-hover-boundary")'
+            ' and position()=last()]//div[@data-test-lottie-animation-status="completed"]'
+        )
+        content = self.page.query_selector_all('//message-content')[-1].inner_text()
+        return content
 
-    def search(self) -> str:
-        self.upload()
-        return self.search_text(self.config['prompt']['text'])
+    def search(self,config_file:str) -> str:
+        prompts_objs = json.load(open(config_file,'r'))
+        content_list = []
+        for index,prompt_obj in enumerate(prompts_objs) :
+            self.upload(prompt_obj)
+            content_list.append(self.search_text(prompt_obj['prompt']['text'],index))
+        return '\n#---------------------------------------#\n'.join(content_list)
 
-    def upload(self):
+    def upload(self,prompt_obj:dict):
         def activate_input_button():
             with self.page.expect_file_chooser() as fc_info:
                 self.page.click('//uploader')
-                self.page.click(f'//button[@id="{"image" if self.config["prompt"]["image"] else "file"}-uploader-local"]') \
+                self.page.click(f'//button[@id="{"image" if prompt_obj["prompt"]["image"] else "file"}-uploader-local"]') \
                     if self.advanced else None  
 
 
         activate_input_button()
-        if self.config['prompt']['image'] :
+        if prompt_obj['prompt']['image'] :
             self.page.query_selector('//input[@name="Filedata"]')\
-                .set_input_files(self.config['prompt']['image'])
-        elif self.config['prompt']['files'] and self.advanced:
+                .set_input_files(prompt_obj['prompt']['image'])
+        elif prompt_obj['prompt']['files'] and self.advanced:
             self.page.query_selector('//input[@name="Filedata"]')\
-                .set_input_files(self.config['prompt']['files'])
+                .set_input_files(prompt_obj['prompt']['files'])
         else :
             pass 
         
@@ -85,8 +96,9 @@ class GeminiBot:
         self.context.close()
         self.browser.close()
     
-    def export(self,content:str):
-        with open(Path(self.config['output_file']),'a' if not self.overloading_export else 'w',encoding='utf-8') as file:
+    def export(self,content:str,base_path:Path,input_file:str):
+        output_path = base_path.joinpath(f'output_for_{Path(input_file).name.replace('.','_')}.txt')
+        with open(Path(output_path),'a' if not self.overloading_export else 'w',encoding='utf-8') as file:
             file.write(content)
             file.write('\n\n#---------------------------------#\n\n')
         self.free_up_playwright_resources()
@@ -97,3 +109,5 @@ class GeminiBot:
             '//bard-mode-switcher'
         ).inner_text().lower()
 
+#//div[@lottie-animation]
+#//div[@data-test-lottie-animation-status="completed"]
