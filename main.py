@@ -10,10 +10,10 @@ from db.db_utils import Db
 
 # initialisations :
 event_emitter = EventEmitter()
-outputs_path = Path(__file__).parent.joinpath('outputs') # change it to be customizable
+outputs_path = Path(__file__).parent.joinpath('outputs')
 inputs_path = Path(__file__).parent.joinpath('inputs')
 file_system = FileSystem(sys.argv[4],sys.argv[5])
-database = Db('test.json')
+database = Db('db.json')
 bot = GeminiBot(
     executable=sys.argv[1],
     port=sys.argv[2],

@@ -69,9 +69,9 @@ class GeminiBot:
         return content
 
     def search(self,config_file:str) -> str:
-        self.close_empty_tab()
         prompts_objs = json.load(open(config_file,'r'))
         self.get_new_page(config_file)
+        self.close_empty_tab()
         content_list = []
         for index,prompt_obj in enumerate(prompts_objs) :
             if prompt_obj['prompt']['text'] in ('close_tab','close_window'):
