@@ -34,7 +34,15 @@ class GeminiBot:
         for context in self.browser.contexts:
             for page in context.pages:
                 if not page.url or page.url == 'chrome://new-tab-page/':
-                    page.close()
+                    page.close() if self.check_pages_count() else None 
+
+    def check_pages_count(self):
+        pages = [
+            page 
+            for context in self.browser.contexts
+            for page in context.pages    
+        ]
+        return len(pages) > 1
 
     def get_new_page(self,config_file:str) :
         self.pages[config_file] = {
@@ -70,16 +78,19 @@ class GeminiBot:
 
     def search(self,config_file:str) -> str:
         prompts_objs = json.load(open(config_file,'r'))
-        self.get_new_page(config_file)
         self.close_empty_tab()
+        self.get_new_page(config_file)
         content_list = []
         for index,prompt_obj in enumerate(prompts_objs) :
             if prompt_obj['prompt']['text'] in ('close_tab','close_window'):
                 self.pages[config_file]['page'].close()
                 break
-            self.upload(prompt_obj,config_file)
+            self.upload(prompt_obj,config_file) if self.check_update(prompt_obj) else None
             content_list.append(self.search_text(prompt_obj['prompt']['text'],index,config_file))
         return '\n#---------------------------------------#\n'.join(content_list)
+
+    def check_update(self,prompt_obj:dict) -> bool:
+        return prompt_obj['prompt']['image'] or prompt_obj['prompt']['files']
 
     def upload(self,prompt_obj:dict,config_file:str):
         page = self.pages[config_file]['page']
