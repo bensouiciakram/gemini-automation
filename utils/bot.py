@@ -2,10 +2,10 @@ import json
 import subprocess
 from time import sleep 
 from pathlib import Path 
-from typing import Optional,Literal
+from typing import Optional,Literal,Tuple
 from playwright.sync_api import sync_playwright 
-
-
+from playwright.sync_api._generated import Page
+from .exceptions import CloseWindowException
 
 class GeminiBot:
 
@@ -18,8 +18,8 @@ class GeminiBot:
         self.executable = executable 
         self.port = port 
         self.overloading_export = int(overloading_export)
-        self.processed_prompts = 0
         self.start_playwright_page() 
+        self.pages = {}
 
     def start_real_browser_instance(self):
         self.process = subprocess.Popen(
@@ -36,56 +36,66 @@ class GeminiBot:
                 if not page.url or page.url == 'chrome://new-tab-page/':
                     page.close()
 
+    def get_new_page(self,config_file:str) :
+        self.pages[config_file] = {
+            'page':self.context.new_page()
+        }
+        self.pages[config_file]['page'].goto('https://gemini.google.com/') 
+        self.pages[config_file]['advanced'] = self.check_advanced(config_file)
+
     def start_playwright_page(self):
         self.start_real_browser_instance()
-        sleep(1)
         playwright = sync_playwright().start()
         self.browser = playwright.chromium.connect_over_cdp(
-            f"http://localhost:{self.port}"
+            f"http://localhost:{self.port}",
+            slow_mo=100
         )
-        self.close_empty_tab()
         self.context = self.browser.contexts[0]
-        self.page = self.context.new_page()
-        self.page.goto('https://gemini.google.com/')
-        self.check_advanced()
     
-    def search_text(self,prompt:str,message_index:int) -> str :
-        self.page.fill('//rich-textarea//p',prompt)
-        self.page.click('//button[contains(@class,"send-button")]')
-        # self.page.wait_for_selector('//message-actions')
-        self.page.wait_for_selector(
-            f'//div[contains(@class,"message-actions-hover-boundary") and position()={message_index+1}]'
+    def search_text(self,prompt:str,index:int,config_file:str) -> str :
+        page = self.pages[config_file]['page']
+        page.fill('//rich-textarea//p',prompt)
+        page.click('//button[contains(@class,"send-button")]')
+        # page.wait_for_selector('//message-actions')
+        page.wait_for_selector(
+            f'//div[contains(@class,"message-actions-hover-boundary") and position()={index+1}]'
         )
-        self.page.wait_for_timeout(1000)
-        self.page.wait_for_selector(
+        page.wait_for_timeout(1000)
+        page.wait_for_selector(
             '//div[contains(@class,"message-actions-hover-boundary")'
             ' and position()=last()]//div[@data-test-lottie-animation-status="completed"]'
         )
-        content = self.page.query_selector_all('//message-content')[-1].inner_text()
+        content = page.query_selector_all('//message-content')[-1].inner_text()
         return content
 
     def search(self,config_file:str) -> str:
+        self.close_empty_tab()
         prompts_objs = json.load(open(config_file,'r'))
+        self.get_new_page(config_file)
         content_list = []
         for index,prompt_obj in enumerate(prompts_objs) :
-            self.upload(prompt_obj)
-            content_list.append(self.search_text(prompt_obj['prompt']['text'],self.processed_prompts + index))
-        self.processed_prompts += len(prompt_obj)
+            if prompt_obj['prompt']['text'] in ('close_tab','close_window'):
+                self.pages[config_file]['page'].close()
+                break
+            self.upload(prompt_obj,config_file)
+            content_list.append(self.search_text(prompt_obj['prompt']['text'],index,config_file))
         return '\n#---------------------------------------#\n'.join(content_list)
 
-    def upload(self,prompt_obj:dict):
+    def upload(self,prompt_obj:dict,config_file:str):
+        page = self.pages[config_file]['page']
+        advanced = self.pages[config_file]['advanced']
         def activate_input_button():
-            with self.page.expect_file_chooser() as fc_info:
-                self.page.click('//uploader')
-                self.page.click(f'//button[@id="{"image" if prompt_obj["prompt"]["image"] else "file"}-uploader-local"]') \
-                    if self.advanced else None  
+            with page.expect_file_chooser() as fc_info:
+                page.click('//uploader')
+                page.click(f'//button[@id="{"image" if prompt_obj["prompt"]["image"] else "file"}-uploader-local"]') \
+                    if advanced else None  
 
         activate_input_button()
         if prompt_obj['prompt']['image'] :
-            self.page.query_selector('//input[@name="Filedata"]')\
+            page.query_selector('//input[@name="Filedata"]')\
                 .set_input_files(prompt_obj['prompt']['image'])
-        elif prompt_obj['prompt']['files'] and self.advanced:
-            self.page.query_selector('//input[@name="Filedata"  and @multiple ]')\
+        elif prompt_obj['prompt']['files'] and advanced:
+            page.query_selector('//input[@name="Filedata"  and @multiple ]')\
                 .set_input_files(prompt_obj['prompt']['files'])
         else :
             pass 
@@ -93,20 +103,30 @@ class GeminiBot:
     def load_config(self) -> dict:
         return json.load(open('config.json','r',encoding='utf-8'))
     
-    def free_up_playwright_resources(self):
-        self.page.close()
+    def close_config_page(self,config_file:str):
+        self.pages[config_file].close()
+
+    def close_all_tabs(self):
+        [
+            page.close() 
+            for context in self.browser.contexts
+            for page in context.pages
+        ]
         self.context.close()
-        self.browser.close()
-    
+
     def export(self,content:str,base_path:Path,input_file:str):
         output_path = base_path.joinpath(f'output_for_{Path(input_file).name.replace('.','_')}.txt')
         with open(Path(output_path),'a' if not self.overloading_export else 'w',encoding='utf-8') as file:
             file.write(content)
             file.write('\n\n#---------------------------------#\n\n')
 
-
-
-    def check_advanced(self):
-        self.advanced = 'advanced' in self.page.query_selector(
+    def check_advanced(self,config_file:str):
+        return 'advanced' in self.pages[config_file]['page'].query_selector(
             '//bard-mode-switcher'
         ).inner_text().lower()
+    
+    def check_close_window(self,config_file:str):
+        last_prompt_obj = json.load(open(config_file,'r'))[-1]
+        if last_prompt_obj['prompt']['text'] == 'close_window':
+            self.close_all_tabs()
+            raise CloseWindowException

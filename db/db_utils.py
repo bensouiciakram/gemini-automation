@@ -21,8 +21,14 @@ class Db :
             self.Config.input_path == file_path
         )
 
-    def check_non_existance(self,file_path:str) -> bool :
-        return not bool(self.db.search(self.Config.input_path == file_path))
+    def check_non_existance_or_not_used(self,file_path:str) -> bool :
+        db_file_obj = self.db.search(self.Config.input_path == file_path)
+        if not db_file_obj :
+            return True 
+        elif not db_file_obj[0]['used']:
+            return True 
+        else :
+            return False
     
     def search_unused(self) -> List[dict]:
         return self.db.search(self.Config.used == False)
