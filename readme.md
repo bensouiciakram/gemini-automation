@@ -33,7 +33,8 @@
    ```
    Example :
    ```bash
-   python main.py "C:\Program Files\Google\Chrome\Application\chrome.exe" 9222 0 ```
+   python main.py "C:\Program Files\Google\Chrome\Application\chrome.exe" 9222 0
+   ```
 
 5. **Chromium-Based Browsers Only**
 The script only works with Chromium-based browsers (e.g., Chrome, Edge, Brave).
