@@ -42,7 +42,8 @@ You can find more details in the Playwright documentation.
 
 6. **Export Behavior**
    ```bash
-   python main.py "C:\Program Files\Google\Chrome\Application\chrome.exe" 9222 1 ```
+   python main.py "C:\Program Files\Google\Chrome\Application\chrome.exe" 9222 1
+   ```
 
 ## Update Notes (9/12/24)
 
