@@ -29,7 +29,8 @@
 4. **Command-Line Usage**  
    You can use the script as a command-line tool with the following format:  
    ```bash
-   python main.py "path_to_your_chrome_executable" port_value overloading_export_value ```
+   python main.py "path_to_your_chrome_executable" port_value overloading_export_value
+   ```
    Example :
    ```bash
    python main.py "C:\Program Files\Google\Chrome\Application\chrome.exe" 9222 0 ```
