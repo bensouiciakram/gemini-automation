@@ -25,7 +25,8 @@ class GeminiBot:
         self.process = subprocess.Popen(
             [
                 self.executable,
-                f'--remote-debugging-port={self.port}'
+                f'--remote-debugging-port={self.port}',
+                '--headless'
             ]
         )
         sleep(2)
