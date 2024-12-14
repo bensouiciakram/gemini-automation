@@ -1,20 +1,50 @@
-I- Setting up the project : 
-    1- make sure you have python installed in your system and it's added into your envirement variable path (you can check this by typing python in cmd and see if you have a python shell)
-    2- install the requirements by double clicking install_requirements.bat file 
-    3- run the script but double clicking run.bat 
+# Project Setup and Usage Guide
 
-II- Notes: 
-    1- A demonstration demo video is included in the delivery compressed file.
-    2- when running the script close all chrome instances 
-    3- If chrome is not  installed in C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" correct this path with your correct path by modifying run.bat
-        (just replace C:\\Program Files\\Google\\Chrome\\Application with the folder where you have chrome)
-    4- You can use the script as command line tools by typing -->  python main.py "path_to_your_chrome_executable" port_value (choose and empty port like 9222) overloading_export_value (0 or 1) example : python main.py "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" 9222 0
-    5- Unfortunately we can only use chormium based browser (chrome,edge,brave ...etc) to connect over cdp (you can check the note here in documention : https://playwright.dev/python/docs/api/class-browsertype#browser-type-connect-over-cdp)
-    6- The export is being appended to the file so if you don't want this set the last value into 1 instead (python main.py "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" 9222 1)
+## I. Setting Up the Project
 
---------------------------------------------
+1. **Ensure Python is installed**  
+   Make sure Python is installed on your system and added to your environment variable path.  
+   You can check this by typing `python` in the command prompt and verifying that a Python shell opens.
 
+2. **Install the requirements**  
+   Run the `install_requirements.bat` file by double-clicking it.
 
-Notes 9/12/24 update : 
+3. **Run the script**  
+   Execute the `run.bat` file by double-clicking it.
 
-    - the empty tab for the first input file is intensionally not closed to avoid the case where you may add "close_tab" in the first input_file which will let use close all the windows (and this require as to open new chrome using subprocess and this can consume resources so i opt to let it like that )
+---
+
+## II. Notes
+
+1. **Demo Video**  
+   A demonstration video is included in the compressed delivery file.
+
+2. **Close Chrome Instances**  
+   Before running the script, make sure all Chrome instances are closed.
+
+3. **Chrome Path Adjustment**  
+   If Chrome is not installed in the default location (`C:\Program Files\Google\Chrome\Application\chrome.exe`), you need to update the `run.bat` file with the correct path.  
+   Replace `C:\Program Files\Google\Chrome\Application` with the folder where Chrome is installed.
+
+4. **Command-Line Usage**  
+   You can use the script as a command-line tool with the following format:  
+   ```bash
+   python main.py "path_to_your_chrome_executable" port_value overloading_export_value ```
+   Example :
+   ```bash
+   python main.py "C:\Program Files\Google\Chrome\Application\chrome.exe" 9222 0 ```
+
+5. **Chromium-Based Browsers Only**
+The script only works with Chromium-based browsers (e.g., Chrome, Edge, Brave).
+You can find more details in the Playwright documentation.
+
+6. **Export Behavior**
+   ```bash
+   python main.py "C:\Program Files\Google\Chrome\Application\chrome.exe" 9222 1 ```
+
+## Update Notes (9/12/24)
+
+* The empty tab for the first input file is intentionally left open.
+This avoids cases where the close_tab command in the first input file might close all windows.
+Opening a new Chrome instance using subprocess to handle this scenario could consume extra resources.
+Thus, the behavior remains as is to optimize resource usage.
