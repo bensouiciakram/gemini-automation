@@ -26,7 +26,7 @@ class GeminiBot:
             [
                 self.executable,
                 f'--remote-debugging-port={self.port}',
-                '--headless'
+                # '--headless'
             ]
         )
         sleep(2)
@@ -67,13 +67,17 @@ class GeminiBot:
         page.click('//button[contains(@class,"send-button")]')
         # page.wait_for_selector('//message-actions')
         page.wait_for_selector(
-            f'//div[contains(@class,"message-actions-hover-boundary") and position()={index+1}]'
+            f'//div[contains(@class,"message-actions-hover-boundary") and position()={index+1}]' \
+                if self.pages[config_file]['advanced'] else '//message-content'
         )
         page.wait_for_timeout(1000)
-        page.wait_for_selector(
-            '//div[contains(@class,"message-actions-hover-boundary")'
-            ' and position()=last()]//div[@data-test-lottie-animation-status="completed"]'
-        )
+        if self.pages[config_file]['advanced']:
+            page.wait_for_selector(
+                '//div[contains(@class,"message-actions-hover-boundary")'
+                ' and position()=last()]//div[@data-test-lottie-animation-status="completed"]' \
+            )
+        else:
+            page.wait_for_selector(f'(//div[@class="response-footer gap complete"])[{index+1}]',state='attached')
         content = page.query_selector_all('//message-content')[-1].inner_text()
         return content
 
